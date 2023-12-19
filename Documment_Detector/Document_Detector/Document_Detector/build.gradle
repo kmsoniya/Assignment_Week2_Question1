@@ -1,0 +1,104 @@
+plugins {
+	id 'java'
+	id 'groovy'
+	id 'org.springframework.boot' version '3.2.0'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.accolite'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	testImplementation platform('org.junit:junit-bom:5.9.1')
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+	implementation 'com.google.guava:guava:30.1-jre'
+	implementation 'com.github.javaparser:javaparser-core:3.25.7'
+	implementation 'org.codehaus.groovy:groovy-all:3.0.9'
+}
+
+
+//tasks.named('test') {
+//	useJUnitPlatform()
+//}
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+
+task scanDocumentation {
+	doLast {
+         def sourceDirectory = 'src/main/java'
+		 def reportDirectory = 'reports'
+         def ClassReportsFile = file("${reportDirectory}/classDoc_report.txt")
+		 def MethodReportsFile = file("${reportDirectory}/methodDoc_report.txt")
+		 def inconsistentReportsFile = file("${reportDirectory}/inconsistent_report.txt")
+
+
+		// checking reportdirectory ,if its not here
+		if(!file(reportDirectory).exists()){
+			file(reportDirectory).mkdirs()
+		}
+
+
+		// defining all reports here
+		def missClassDocReport = []
+		def missMethodDocReport = []
+		def inconsistentDocReport = []
+		def methodNoAnnotation = []
+
+		// iterating through all java files
+		fileTree(dir: sourceDirectory,include: '**/*.java' ).each{ file->
+			if(file.name == 'ClassDocumentation.java' || file.name=='MethodDocumentation.java'){
+				return
+			}
+
+			// reading data/content of file
+			def fileData = file.text
+
+			//checking here class annotation
+			if(!fileData.contains("@ClassDocumentation")){
+				missClassDocReport << "Here class documentation is miss @ClassDocumentation for class : ${file.name}\n"
+			}
+
+			if(!fileData.contains("@MethodDocumentation")){
+				missMethodDocReport << "Here method documentation is missing @MethodDocumentation for class : ${file.name}\n"
+			}
+
+			// checking for inconsistent method annotation
+			if(fileData.contains("@MethodDocumentation") && !fileData.contains("@ClassDocumentation")){
+				inconsistentDocReport <<"here inconsistent annotation for class: ${file.name}\n"
+			}
+
+			// extract methods without @methodDocumentation
+			def lines = fileData.split('\n')
+			lines.each { line ->
+				if(!line.contains("@MethodDocumentation")
+						&& line =~ /\b\w+\(/){
+					def methodName = line.find(/\b\w+\(/).toString().replaceAll(/\(/,'')
+					methodNoAnnotation << "${file.name}:${methodName}"
+				}
+			}
+
+		}
+
+		//adding or write reports to file
+		ClassReportsFile.text = "Here missing @ClassDocumentation:\n${missClassDocReport.join('\n')}"
+		MethodReportsFile.text = "Here missing @MethodDocumentation:\n${missMethodDocReport.join('\n')}\n\nMethods without @MethodDocumentation:\n${methodNoAnnotation.join('\n')}"
+		inconsistentReportsFile.text = "Inconsistent annotation :\n${inconsistentDocReport.join('\n')}"
+
+		println "Documentation scan is complete. check ${ClassReportsFile},${MethodReportsFile}, and ${inconsistentReportsFile} for the reports!!"
+	}
+}
+
