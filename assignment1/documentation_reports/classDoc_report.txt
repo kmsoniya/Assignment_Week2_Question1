@@ -1,0 +1,6 @@
+Here missing @ClassDocumentation:
+Here class documentation is miss @ClassDocumentation for class : Cube.java
+
+Here class documentation is miss @ClassDocumentation for class : Square.java
+
+Here class documentation is miss @ClassDocumentation for class : Sum.java

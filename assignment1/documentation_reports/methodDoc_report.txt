@@ -1,0 +1,13 @@
+Here missing @MethodDocumentation:
+Here method documentation is missing @MethodDocumentation for class : Cube.java
+
+Here method documentation is missing @MethodDocumentation for class : Square.java
+
+
+Methods without @MethodDocumentation:
+Cube.java:calculateSquare
+Square.java:SquareClass
+Sum.java:sumClass
+Sum.java:printf
+Sum.java:sum
+Sum.java:printf
